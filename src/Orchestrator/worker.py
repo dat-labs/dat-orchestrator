@@ -10,6 +10,7 @@ from dat_core.pydantic_models.connection import Connection
 
 TMP_DIR_LOCATION = '/tmp/.dat'
 app = Celery('tasks', broker='amqp://mq_user:mq_pass@message-queue:5672//')
+os.makedirs(TMP_DIR_LOCATION, exist_ok=True)
 
 
 @app.task(queue='dat-worker-q', name='dat_worker_task')
@@ -32,7 +33,5 @@ def worker(connection_str):
 
 
 if __name__ == '__main__':
-    os.makedirs(TMP_DIR_LOCATION, exist_ok=True)
-    connection_obj = None
     app.send_task('dat_worker_task', (open(
         'connection.json').read(), ), queue='dat-worker-q')
