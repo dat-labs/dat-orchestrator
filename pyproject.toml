@@ -5,7 +5,7 @@ description = "Will house executables and orchestrate job runs"
 license = {text = "MIT License"}
 dependencies = [
   "celery",
-  # "pydantic",
+  "pydantic",
   # "sphinx@git+https://github.com/sphinx-doc/sphinx#egg=branchname",
   "dat-core@git+ssh://git@github.com/riju-dc/dat-core@feature/base-classes",
   "verified-sources@git+ssh://git@github.com/dc-rahul/verified-sources@feature/google-drive-and-wikipedia-forked",
