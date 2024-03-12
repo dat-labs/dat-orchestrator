@@ -119,6 +119,12 @@ def gen_cmd_proc(src_queue: Queue, vectors_queue: Queue, gen_cmd: str) -> None:
 
 
 def dst_cmd_proc(vectors_queue: Queue, dst_cmd: str) -> None:
+    def _process_items(items):
+        with Popen(shlex.split(dst_cmd), stdin=PIPE, stdout=PIPE) as proc_out:
+            for item in items:
+                proc_out.stdin.write(item)
+            print(proc_out.communicate()[0].decode(), flush=True)
+    
     items = []
     while True:
         item = vectors_queue.get()
@@ -127,21 +133,15 @@ def dst_cmd_proc(vectors_queue: Queue, dst_cmd: str) -> None:
 
         items.append(item)
         if len(items) > MAX_LEN_ROWS_BUFFER:
-            with Popen(shlex.split(dst_cmd), stdin=PIPE, stdout=PIPE) as proc_out:
-                for item in items:
-                    proc_out.stdin.write(item)
-                print(proc_out.communicate()[0])
+            _process_items(items)
             items = []
-    if len(items):
-        with Popen(shlex.split(dst_cmd), stdin=PIPE, stdout=PIPE) as proc_out:
-            for item in items:
-                proc_out.stdin.write(item)
-            print(proc_out.communicate()[0])
+    if not items:
+        return
+    _process_items(items)
 
 
 @gen_tmp_file
 def process(config, src_file, src_ctlg_file, gen_file, dst_file, dst_ctlg_file):
-    # print(src_file, src_ctlg_file, gen_file, dst_file)
     src_cmd = _gen_cmd(
         actor_type='source',
         args={
@@ -157,7 +157,6 @@ def process(config, src_file, src_ctlg_file, gen_file, dst_file, dst_ctlg_file):
         actor_type='destination',
         args={'cfg': dst_file, 'ctlg': dst_ctlg_file, }
     )
-    # print(src_cmd, gen_cmd, dst_cmd)
 
     src_queue = Queue()
     vectors_queue = Queue()
