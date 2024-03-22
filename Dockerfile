@@ -1,11 +1,14 @@
-FROM python:3.11
+FROM python:3.10
 WORKDIR /repo
 ARG SSH_PRIVATE_KEY
 RUN mkdir /root/.ssh/ && echo "${SSH_PRIVATE_KEY}" >> /root/.ssh/id_rsa
 RUN chmod 400 /root/.ssh/id_rsa && ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 COPY pyproject.toml .
+COPY poetry.lock .
+RUN pip install poetry
 
-RUN pip install -e .
-# CMD python -m http.server
+RUN poetry config virtualenvs.create false && poetry install --no-root
+RUN pip install uvicorn[standard]
+
 CMD celery -A src.Orchestrator.worker worker -Q dat-worker-q
