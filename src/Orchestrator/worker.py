@@ -2,6 +2,7 @@
 Entry point module for dat pipeline worker
 """
 import os
+import json
 import shlex
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
@@ -61,11 +62,14 @@ def worker(connection_str):
         _cmd = f'python src/Orchestrator/main.py -cfg {src_tmp_file.name}'
         with Popen(shlex.split(_cmd), stdout=PIPE) as proc:
             for line_a in proc.stdout:
-                line_a_decoded = line_a.decode()
                 try:
+                    line_a_decoded = json.loads(line_a.decode())
                     DatMessage.model_validate(line_a_decoded)
                 except pydantic_core._pydantic_core.ValidationError:
-                    print(f'rejecting message: {line_a_decoded}')
+                    print(f'not DatMessage; rejecting message: {line_a_decoded}')
+                    continue
+                except json.decoder.JSONDecodeError:
+                    print(f'unable to parse JSON; rejecting message: {line_a.decode()}')
                     continue
                 # print(f'line_a.decode(): {line_a_decoded}')
                 add_to_telemetry_q(msg=line_a_decoded)
