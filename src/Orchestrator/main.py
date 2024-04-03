@@ -73,27 +73,27 @@ def gen_tmp_file(func):
         with NamedTemporaryFile(mode='w', prefix='cnctn_src_',
                                 dir=TMP_DIR_LOCATION) as src_tmp_file:
             src_tmp_file.write(
-                connection_mdl.spec.source.spec.model_dump_json())
+                connection_mdl.source.model_dump_json())
             src_tmp_file.flush()
             with NamedTemporaryFile(mode='w', prefix='cnctn_src_',
                                     dir=TMP_DIR_LOCATION) as src_ctlg_tmp_file:
                 src_ctlg_tmp_file.write(
-                    connection_mdl.spec.source.catalog.model_dump_json())
+                    connection_mdl.catalog.model_dump_json())
                 src_ctlg_tmp_file.flush()
                 with NamedTemporaryFile(mode='w', prefix='cnctn_gen_',
                                         dir=TMP_DIR_LOCATION) as gen_tmp_file:
                     gen_tmp_file.write(
-                        connection_mdl.spec.generator.spec.model_dump_json())
+                        connection_mdl.generator.model_dump_json())
                     gen_tmp_file.flush()
                     with NamedTemporaryFile(mode='w', prefix='cnctn_dst_',
                                             dir=TMP_DIR_LOCATION) as dst_tmp_file:
                         dst_tmp_file.write(
-                            connection_mdl.spec.destination.spec.model_dump_json())
+                            connection_mdl.destination.model_dump_json())
                         dst_tmp_file.flush()
                         with NamedTemporaryFile(mode='w', prefix='cnctn_dst_',
                                                 dir=TMP_DIR_LOCATION) as dst_ctlg_tmp_file:
                             dst_ctlg_tmp_file.write(
-                                connection_mdl.spec.destination.catalog.model_dump_json())
+                                connection_mdl.catalog.model_dump_json())
                             dst_ctlg_tmp_file.flush()
                             func(*args, src_tmp_file.name, src_ctlg_tmp_file.name,
                                  gen_tmp_file.name, dst_tmp_file.name, dst_ctlg_tmp_file.name)
