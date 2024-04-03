@@ -9,7 +9,6 @@ Interfaces to be defined:
 
 import sys
 import json
-from time import time
 from importlib import import_module
 import click
 from dat_core.pydantic_models.connector_specification import ConnectorSpecification
@@ -27,7 +26,7 @@ def cli():
 def discover(config):
     config_mdl = ConnectorSpecification.model_validate_json(config.read())
     SourceClass = getattr(
-        import_module(f'verified_sources.{config_mdl.name.lower()}.source'), config_mdl.name)
+        import_module(f'verified_sources.{config_mdl.module_name}.source'), config_mdl.name)
     catalog = SourceClass().discover(config=config_mdl)
     click.echo(catalog.model_dump_json())
 
@@ -38,7 +37,7 @@ def discover(config):
 def read(config, catalog):
     config_mdl = ConnectorSpecification.model_validate_json(config.read())
     SourceClass = getattr(
-        import_module(f'verified_sources.{config_mdl.name.lower()}.source'), config_mdl.name)
+        import_module(f'verified_sources.{config_mdl.module_name}.source'), config_mdl.name)
 
     catalog_mdl = DatCatalog.model_validate_json(catalog.read())
     doc_generator = SourceClass().read(
@@ -55,7 +54,7 @@ def generate(config):
 
     config_mdl = ConnectorSpecification.model_validate_json(config.read())
     GeneratorClass = getattr(
-        import_module(f'verified_generators.{config_mdl.name.lower()}.generator'), config_mdl.name)
+        import_module(f'verified_generators.{config_mdl.module_name}.generator'), config_mdl.name)
 
     for line in sys.stdin:
         try:
@@ -81,7 +80,7 @@ def write(config, catalog):
     from dat_core.pydantic_models.dat_message import DatMessage, Type
     config_mdl = ConnectorSpecification.model_validate_json(config.read())
     DestinationClass = getattr(
-        import_module(f'verified_destinations.{config_mdl.name.lower()}.destination'), config_mdl.name)
+        import_module(f'verified_destinations.{config_mdl.module_name}.destination'), config_mdl.name)
     configured_catalog = DatCatalog.model_validate_json(catalog.read())
 
     rows_buffer = []

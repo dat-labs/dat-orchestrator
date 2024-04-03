@@ -10,6 +10,12 @@ license = "MIT"
 python = "^3.10"
 celery = "^5.3.6"
 pydantic = "^2.6.4"
+# TODO REMOVE THESE !
+lxml = "^5.1.0"
+openai = "^1.16.0"
+langchain-openai = "^0.1.1"
+pinecone-client = "^3.1.0"
+
 dat-core = {git = "ssh://git@github.com/riju-dc/dat-core", rev = "feature/base-classes"}
 verified-sources = {git = "ssh://git@github.com/dc-rahul/verified-sources", rev = "feature/google-drive-and-wikipedia-forked"}
 verified-generators = {git = "ssh://git@github.com/riju-dc/verified-generators", rev = "feature/openai-embeddings-and-sentence-transformers"}
