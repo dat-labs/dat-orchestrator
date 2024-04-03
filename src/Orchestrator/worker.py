@@ -24,7 +24,7 @@ class TelemetryMsg(BaseModel):
     connection_id: str
     dat_message: DatMessage
 
-def add_to_telemetry_q(msg: str) -> None:
+def add_to_telemetry_q(connection_id: str, msg: str) -> None:
     """Will add the passed message string to
     telemetry queue: dat-telemetry-q
 
@@ -33,7 +33,7 @@ def add_to_telemetry_q(msg: str) -> None:
     """
     telemetry_celery_app.send_task(
         'dat_telemetry_task', (TelemetryMsg(
-            connection_id='b56f1b30-7eb9-4ecd-b05d-a6548ec68cbd',
+            connection_id=connection_id,
             dat_message=msg).model_dump_json(), ), queue='dat-telemetry-q')
 
 
@@ -46,12 +46,13 @@ def worker(connection_str):
     connection = Connection.model_validate_json(connection_str)
     # print(f'Received task with connection: {connection}')
     add_to_telemetry_q(
+        connection_id=connection.id,
         msg=DatMessage(
             type=Type.LOG,
             log=DatLogMessage(
                 level='INFO',
                 message='Job run started',
-                connection=connection.model_dump_json(),
+                # connection=connection.model_dump_json(),
             )
         )
     )
@@ -64,23 +65,26 @@ def worker(connection_str):
             for line_a in proc.stdout:
                 try:
                     line_a_decoded = json.loads(line_a.decode())
-                    DatMessage.model_validate(line_a_decoded)
+                    line_a_decoded_mdl = DatMessage.model_validate(line_a_decoded)
                 except pydantic_core._pydantic_core.ValidationError:
                     print(f'not DatMessage; rejecting message: {line_a_decoded}')
                     continue
                 except json.decoder.JSONDecodeError:
                     print(f'unable to parse JSON; rejecting message: {line_a.decode()}')
                     continue
-                # print(f'line_a.decode(): {line_a_decoded}')
-                add_to_telemetry_q(msg=line_a_decoded)
+                if line_a_decoded_mdl.type.value.lower() != 'log':
+                    continue
+                add_to_telemetry_q(connection_id=connection.id,
+                                   msg=line_a_decoded)
 
     add_to_telemetry_q(
+        connection_id=connection.id,
         msg=DatMessage(
         type=Type.LOG,
         log=DatLogMessage(
             level='INFO',
             message='Job run ended',
-            connection=connection.model_dump_json(),
+            # connection=connection.model_dump_json(),
         )))
 
 if __name__ == '__main__':
