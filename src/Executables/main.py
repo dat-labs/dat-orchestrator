@@ -7,6 +7,7 @@ Interfaces to be defined:
 
 import sys
 import json
+from traceback import format_exc
 from importlib import import_module
 import click
 from dat_core.pydantic_models import ConnectorSpecification, DatCatalog, StreamState
@@ -33,6 +34,7 @@ def discover(config):
 @click.option('--catalog', '-ctlg', type=click.File(), required=True)
 @click.option('--combined-state', '-cmb-state', type=click.File(), required=False)
 def read(config, catalog, combined_state):
+    from dat_core.pydantic_models import DatMessage, Type, DatLogMessage
     if not combined_state:
         combined_state = {}
     else:
@@ -51,14 +53,23 @@ def read(config, catalog, combined_state):
     combined_state_mdl = {_k: StreamState(**_v) for (_k, _v) in combined_state.items()}
     doc_generator = SourceClass().read(
         config=config_mdl, catalog=catalog_mdl, state=combined_state_mdl)
-    for doc in doc_generator:
-        click.echo(doc.model_dump_json())
+    try:
+        for doc in doc_generator:
+            click.echo(doc.model_dump_json())
+    except Exception as _e:
+        click.echo(DatMessage(
+            type=Type.LOG,
+            log=DatLogMessage(
+            level='ERROR',
+            message=str(_e),
+            stack_trace=format_exc(),
+        )).model_dump_json())
 
 
 @cli.command()
 @click.option('--config', '-cfg', type=click.File(), required=True)
 def generate(config):
-    from dat_core.pydantic_models.dat_message import DatMessage, Type
+    from dat_core.pydantic_models import DatMessage, Type, DatLogMessage
     # from dat_core.pydantic_models.dat_message import DatDocumentMessage, Data
 
     config_mdl = ConnectorSpecification.model_validate_json(config.read())
@@ -78,15 +89,24 @@ def generate(config):
             config=config_mdl,
             dat_message=DatMessage.model_validate(json_line)
         )
-        for vector in e:
-            click.echo(vector.model_dump_json())
+        try:
+            for vector in e:
+                click.echo(vector.model_dump_json())
+        except Exception as _e:
+            click.echo(DatMessage(
+                type=Type.LOG,
+                log=DatLogMessage(
+                level='ERROR',
+                message=str(_e),
+                stack_trace=format_exc(),
+            )).model_dump_json())
 
 
 @cli.command()
 @click.option('--config', '-cfg', type=click.File(), required=True)
 @click.option('--catalog', '-ctlg', type=click.File(), required=True)
 def write(config, catalog):
-    from dat_core.pydantic_models.dat_message import DatMessage, Type
+    from dat_core.pydantic_models import DatMessage, Type, DatLogMessage
     config_mdl = ConnectorSpecification.model_validate_json(config.read())
     DestinationClass = getattr(
         import_module(f'verified_destinations.{config_mdl.module_name}.destination'), config_mdl.name)
@@ -121,8 +141,17 @@ def write(config, catalog):
             configured_catalog=configured_catalog,
             input_messages=rows_buffer,
         )
-        for m in e:
-            click.echo(m.model_dump_json())
+        try:
+            for m in e:
+                click.echo(m.model_dump_json())
+        except Exception as _e:
+            click.echo(DatMessage(
+                type=Type.LOG,
+                log=DatLogMessage(
+                level='ERROR',
+                message=str(_e),
+                stack_trace=format_exc(),
+            )).model_dump_json())
 
 
 
