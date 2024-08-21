@@ -11,8 +11,7 @@ unzip /tmp/chrome-headless-shell-linux64.zip -d /opt/
 RUN apt-get update && \
 apt-get install -y libnss3 libdbus-1-3 libatk1.0-0 libatk-bridge2.0 libxcomposite1 libxdamage1 libxrandr2 libxkbcommon-x11-dev libgbm-dev libasound2
 
-COPY pyproject.toml .
-COPY poetry.lock .
+COPY . .
 RUN pip install poetry
 
 RUN poetry config virtualenvs.create false && poetry lock && poetry install --no-root
