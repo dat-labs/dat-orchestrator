@@ -83,7 +83,7 @@ def gen_tmp_file(func):
                 )
             except ApiException as e:
                 print(
-                    "Exception when calling ConnectionRunLogsApi->add_connection_run_log_connection_run_logs_post: %s\n" % e)
+                    "Exception when calling ConnectionRunLogsApi->get_combined_stream_states_connection_run_logs_connection_id_stream_states_get: %s\n" % e)
         with NamedTemporaryFile(mode='w', prefix='cnctn_src_',
                                 dir=TMP_DIR_LOCATION) as src_tmp_file:
             src_tmp_file.write(
